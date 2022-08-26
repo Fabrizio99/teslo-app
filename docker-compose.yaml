@@ -1,0 +1,8 @@
+services:
+  teslodb:  # nombre del servicio
+    image: mongo:5.0.0
+    container_name: teslo-database  # nombre del contenedor
+    ports:
+      - 27017:27017 # puerto de mongo(computadora): puerto del contenedor
+    volumes:
+      - ./mongo:/data/db
