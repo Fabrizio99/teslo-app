@@ -1,12 +1,15 @@
-import { Box, Button, Chip, Grid, Typography } from "@mui/material";
+import { NextPage, GetStaticPaths, GetStaticProps } from "next";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import { ShopLayout } from "../../components/layouts";
 import { ProductSlideshow, SizeSelector } from "../../components/products";
 import { ItemCounter } from "../../components/ui";
-import { initialData } from "../../database/products";
+import { IProduct } from "../../interfaces";
+import { dbProducts } from "../../database";
 
-const product = initialData.products[0];
-
-const ProductPage = () => {
+interface Props {
+  product: IProduct;
+}
+const ProductPage: NextPage<Props> = ({ product }) => {
   return (
     <ShopLayout title={product.title} pageDescription={product.description}>
       <Grid container spacing={3}>
@@ -40,6 +43,53 @@ const ProductPage = () => {
       </Grid>
     </ShopLayout>
   );
+};
+
+// NO USAR
+// export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+//   const { slug = "" } = params as { slug: string };
+//   const product = await dbProducts.getProductBySlug(slug);
+
+//   if (!product) {
+//     return {
+//       redirect: {
+//         destination: "/",
+//         permanent: false,
+//       },
+//     };
+//   }
+
+//   return {
+//     props: { product },
+//   };
+// };
+
+export const getStaticPaths: GetStaticPaths = async (ctx) => {
+  const productSlugs = await dbProducts.getAllProductSlug();
+
+  return {
+    paths: productSlugs.map(({ slug }) => ({ params: { slug } })),
+    fallback: "blocking",
+  };
+};
+
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const { slug = "" } = params as { slug: string };
+  const product = await dbProducts.getProductBySlug(slug);
+
+  if (!product) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { product },
+    revalidate: 60 * 60 * 24,
+  };
 };
 
 export default ProductPage;
